@@ -1,37 +1,29 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
+  Post,
+  Body,
   HttpException,
   HttpStatus,
-  Inject,
   Param,
   ParseIntPipe,
-  Post,
-  Put,
-  Scope,
+  Delete,
 } from '@nestjs/common';
 import { SongsService } from './songs.service';
-import { CreateSongDto } from './dto/create-song-dto';
-import { Connection } from '../common/constatnts/connection';
+import { CreateSongDto } from './dto/create-song.dto';
+import { Song } from './song.entity';
 
-@Controller({ path: 'songs', scope: Scope.REQUEST })
+@Controller('songs')
 export class SongsController {
-  constructor(
-    private songsService: SongsService,
-    @Inject('CONNECTION')
-    private connection: Connection,
-  ) {
-    console.log(`THIS IS THE CONNECTION: ${this.connection.CONNECTION_STRING}`);
-  }
+  constructor(private readonly songsService: SongsService) {}
 
   @Post()
-  create(@Body() createSongDTO: CreateSongDto) {
-    this.songsService.craete(createSongDTO);
+  create(@Body() createSongDto: CreateSongDto): Promise<Song> {
+    return this.songsService.create(createSongDto);
   }
+
   @Get()
-  findAll() {
+  findAll(): Promise<Song[]> {
     try {
       return this.songsService.findAll();
     } catch (error) {
@@ -44,24 +36,32 @@ export class SongsController {
       );
     }
   }
+
   @Get(':id')
-  findOne(
+  async findOne(
     @Param(
       'id',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
     )
     id: number,
-  ) {
-    return `This action returns a #${id} song`;
-  }
+  ): Promise<Song> {
+    const song = await this.songsService.findOne(id);
 
-  @Put(':id')
-  update(@Param('id') id: string): string {
-    return `This action updates a #${id} song`;
+    if (!song) {
+      throw new HttpException('Song not found', HttpStatus.NOT_FOUND);
+    }
+
+    return song;
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string): string {
-    return `This action removes a #${id} song`;
+  remove(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ): Promise<void> {
+    throw new HttpException('Success Delete Song', HttpStatus.OK);
   }
 }
