@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsMilitaryTime,
   IsDateString,
+  IsInt,
 } from 'class-validator';
 
 export class CreateSongDto {
@@ -26,4 +27,8 @@ export class CreateSongDto {
   @IsNotEmpty()
   @IsString()
   lyrics: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  playlistId: number;
 }
