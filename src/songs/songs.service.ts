@@ -86,14 +86,28 @@ export class SongsService {
     return this.songsRepository.save(song);
   }
 
-  async paginate(options: IPaginationOptions): Promise<Pagination<Song>> {
-    const queryBuilder = this.songsRepository.createQueryBuilder('song');
-    queryBuilder
-      .leftJoinAndSelect('song.artists', 'artist')
-      .leftJoinAndSelect('song.playlist', 'playlist')
-      .select(['song', 'artist.name', 'playlist.id', 'playlist.name'])
-      .orderBy('song.id', 'DESC');
+  async paginate({
+    page,
+    limit,
+  }: {
+    page: number;
+    limit: number;
+  }): Promise<Pagination<Song>> {
+    const [results, total] = await this.songsRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      relations: ['artists', 'playlist'],
+    });
 
-    return paginate<Song>(queryBuilder, options);
+    return {
+      items: results,
+      meta: {
+        totalItems: total,
+        itemCount: results.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      },
+    };
   }
 }
